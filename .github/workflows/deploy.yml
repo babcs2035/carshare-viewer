@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
           port: ${{ secrets.DEPLOY_PORT }}
-          source: ".next/standalone,public,scripts,package.json,pm2.config.cjs"
+          source: ".next/standalone,public,scripts,mise.toml,package.json,pm2.config.cjs"
           target: ${{ secrets.DEPLOY_TARGET }}
 
       - name: Unpack and Restart Server
