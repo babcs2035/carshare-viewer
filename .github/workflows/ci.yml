@@ -23,7 +23,7 @@ jobs:
           install: true
 
       - name: Prepare environment variables
-        run: cp .env.example .env
+        run: cp .env.sample .env
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
