@@ -1,3 +1,18 @@
+/**
+ * ダッシュボード Client Component
+ *
+ * 主な機能：
+ * - 前計算済み Dashboard データから統計表示
+ * - Recharts 用チャート（棒グラフ・円グラフ）描画
+ * - 都道府県別統計・車種別構成比・ヒートマップ表示
+ * - 動的な Leaflet 地図ヒートマップレイヤー（ClientMapWithHeatmap）
+ * - 統計ガイドカード（ステーション数・車両数等）
+ *
+ * パフォーマンス特性：
+ * - サーバー前計算デ達により，クライアント側の集計計算廃止
+ * - チャートはコンポーネント再マウント時のみ再描画（props 変更時）
+ */
+
 'use client';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -62,6 +77,7 @@ interface DashboardPageClientProps {
   prefectureCarCountChartData: { name: string; count: number }[];
   classPieData: { name: string; value: number }[];
   topCarData: { name: string; count: number }[];
+  topCarDataTotalCount: number;
   heatmapData: [number, number, number][];
 }
 
@@ -159,9 +175,12 @@ export function DashboardPageClient({
   prefectureCarCountChartData,
   classPieData,
   topCarData,
+  topCarDataTotalCount,
   heatmapData,
 }: DashboardPageClientProps) {
   const theme = useTheme();
+  const carModelChartHeight = Math.max(1024, topCarData.length * 24);
+
   const COLORS = [
     theme.palette.primary.main,
     theme.palette.secondary.main,
@@ -395,7 +414,10 @@ export function DashboardPageClient({
         >
           <Box sx={{ flex: '1 1 100%', minWidth: 0 }}>
             <ChartCard icon={<DirectionsCarIcon />} title='車種別車両数'>
-              <ResponsiveContainer width='100%' height={1024}>
+              <Typography variant='caption' color='text.secondary'>
+                全{topCarDataTotalCount}件を表示
+              </Typography>
+              <ResponsiveContainer width='100%' height={carModelChartHeight}>
                 <BarChart
                   layout='vertical'
                   data={topCarData}

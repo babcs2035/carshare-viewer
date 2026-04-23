@@ -1,3 +1,20 @@
+/**
+ * ステーション地図コンポーネント
+ *
+ * 主な機能：
+ * - Leaflet 地図ライブラリでインタラクティブな地図表示
+ * - ステーションマーカーの表示・ポップアップ表示
+ * - ズームレベル・表示範囲ベースのマーカー動的制御
+ *   （高ズーム時は全マーカー表示，低ズーム時は主要マーカーのみ）
+ * - マーカークリック時にステーション詳細ページ呼び出し
+ * - 地図スクロール・ズーム・ドラッグ操作対応
+ *
+ * パフォーマンス特性：
+ * - メモ化により不要な再描画削減
+ * - 動的マーカー制御でレンダリング負荷軽減
+ * - SSR 無効（Leaflet ブラウザ API 依存）
+ */
+
 'use client';
 
 import { alpha, Box, Button, Stack, Typography, useTheme } from '@mui/material';
@@ -14,9 +31,9 @@ import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import type { Station } from '@/types';
+import type { MapStation } from '@/types';
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -25,11 +42,11 @@ L.Icon.Default.mergeOptions({
 });
 
 interface StationMapProps {
-  stations: Station[];
-  onOpenDetails: (station: Station) => void;
+  stations: MapStation[];
+  onOpenDetails: (station: MapStation) => void;
 }
 
-export function StationMap({ stations, onOpenDetails }: StationMapProps) {
+function StationMapComponent({ stations, onOpenDetails }: StationMapProps) {
   const theme = useTheme();
 
   const iconCreateFunction = useMemo(() => {
@@ -142,3 +159,6 @@ export function StationMap({ stations, onOpenDetails }: StationMapProps) {
     </Box>
   );
 }
+
+export const StationMap = memo(StationMapComponent);
+StationMap.displayName = 'StationMap';

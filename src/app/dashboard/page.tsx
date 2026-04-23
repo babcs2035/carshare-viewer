@@ -1,83 +1,42 @@
-import { DashboardPageClient } from '@/components/DashboardPageClient';
-import type { Station } from '@/types';
-
 /**
- * Fetches all station data from the API route.
- * This function runs only on the server.
+ * ダッシュボードページ
+ *
+ * Server Component として機能：
+ * 1. MongoDB から前計算済み Dashboard データを取得（getDashboardPageData）
+ * 2. 都道府県別統計・車種別集計・ヒートマップを Client Component へ渡却
+ *
+ * Client Component が受け取り：
+ * - Recharts チャート描画（前計算データのみ利用）
+ * - インタラクティブなグラフ（ツールチップ，クリック操作）
+ *
+ * パフォーマンス最適化：
+ * - サーバーで集計計算済み（前計算データ読み込みのみ）
+ * - クライアント側の複雑な計算廃止
+ * - force-dynamic で最新データ保証
  */
-async function getStations(): Promise<Station[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stations`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch station data');
-  }
-  return res.json();
-}
+
+import { DashboardPageClient } from '@/components/DashboardPageClient';
+import { getDashboardPageData } from '@/lib/stations';
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const allStations = await getStations();
-
-  // 1. Geographical Distribution: Stations by Prefecture
-  const prefectureStationCounts: { [key: string]: number } = {};
-  allStations.forEach(station => {
-    const prefecture =
-      station.address.match(/^(.{2,3}?[都道府県])/)?.[0] || 'その他';
-    prefectureStationCounts[prefecture] =
-      (prefectureStationCounts[prefecture] || 0) + 1;
-  });
-  const prefectureStationChartData = Object.entries(prefectureStationCounts)
-    .sort(([, countA], [, countB]) => countB - countA)
-    .map(([name, count]) => ({ name, count }));
-
-  // 2. NEW: Car Count by Prefecture
-  const prefectureCarCounts: { [key: string]: number } = {};
-  allStations.forEach(station => {
-    const prefecture =
-      station.address.match(/^(.{2,3}?[都道府県])/)?.[0] || 'その他';
-    prefectureCarCounts[prefecture] =
-      (prefectureCarCounts[prefecture] || 0) + station.car_fleet.length;
-  });
-  const prefectureCarCountChartData = Object.entries(prefectureCarCounts)
-    .sort(([, countA], [, countB]) => countB - countA)
-    .map(([name, count]) => ({ name, count }));
-
-  // 3. Vehicle Composition: Class Ratio & Top 20 Cars
-  const classCounts: { [key: string]: number } = {};
-  const carNameCounts: { [key: string]: number } = {};
-  let totalCars = 0;
-  allStations.forEach(station => {
-    totalCars += station.car_fleet.length;
-    station.car_fleet.forEach(car => {
-      classCounts[car.class_name] = (classCounts[car.class_name] || 0) + 1;
-      carNameCounts[car.car_name] = (carNameCounts[car.car_name] || 0) + 1;
-    });
-  });
-  const classPieData = Object.entries(classCounts).map(([name, value]) => ({
-    name,
-    value,
-  }));
-
-  const topCarData = Object.entries(carNameCounts)
-    .sort(([, countA], [, countB]) => countB - countA)
-    .map(([name, count]) => ({ name, count }));
-
-  const totalCarModels = Object.keys(carNameCounts).length;
-  const heatmapData = allStations.map(
-    s =>
-      [s.latitude, s.longitude, s.car_fleet.length] as [number, number, number],
+  const dashboardData = await getDashboardPageData();
+  console.log(
+    `✅ Loaded precomputed dashboard data (${dashboardData.totalStations} stations)`,
   );
 
   return (
     <DashboardPageClient
-      totalStations={allStations.length}
-      totalCars={totalCars}
-      prefectureStationChartData={prefectureStationChartData}
-      prefectureCarCountChartData={prefectureCarCountChartData}
-      classPieData={classPieData}
-      topCarData={topCarData}
-      heatmapData={heatmapData}
-      totalCarModels={totalCarModels}
+      totalStations={dashboardData.totalStations}
+      totalCars={dashboardData.totalCars}
+      prefectureStationChartData={dashboardData.prefectureStationChartData}
+      prefectureCarCountChartData={dashboardData.prefectureCarCountChartData}
+      classPieData={dashboardData.classPieData}
+      topCarData={dashboardData.topCarData}
+      topCarDataTotalCount={dashboardData.topCarDataTotalCount}
+      heatmapData={dashboardData.heatmapData}
+      totalCarModels={dashboardData.totalCarModels}
     />
   );
 }

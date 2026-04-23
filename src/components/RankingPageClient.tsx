@@ -1,3 +1,19 @@
+/**
+ * ランキングページ Client Component
+ *
+ * 主な機能：
+ * - 車両数別・車種数別の前計算済みランキング表示
+ * - ランキングのスコアボード化（Avatar・Card で視認性向上）
+ * - ステーション詳細情報（車両一覧，住所，写真）モーダル表示
+ * - タブ切り替え（車両数ランキング ← → 車種数ランキング）
+ * - モバイル・デスクトップ対応（Drawer/Dialog 使い分け）
+ *
+ * パフォーマンス特性：
+ * - サーバー前計算によりランタイム計算廃止
+ * - メモ化により不要な再レンダリング削減
+ * - ランキング上位 16 駅のみ事前取得（初期描画負荷軽減）
+ */
+
 'use client';
 
 import CategoryIcon from '@mui/icons-material/Category';
@@ -22,7 +38,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Station } from '@/types';
 import { StationDetailPage } from './StationDetailPage';
 
@@ -36,7 +52,7 @@ export interface RankedStation {
 interface RankingPageClientProps {
   topByCarCount: RankedStation[];
   topByVariety: RankedStation[];
-  allStations: Station[];
+  detailStations: Station[];
 }
 
 const RankingList = ({
@@ -187,14 +203,19 @@ const RankingList = ({
 export function RankingPageClient({
   topByCarCount,
   topByVariety,
-  allStations,
+  detailStations,
 }: RankingPageClientProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const stationByCode = useMemo(
+    () =>
+      new Map(detailStations.map(station => [station.station_code, station])),
+    [detailStations],
+  );
 
   const handleOpenDetails = (stationCode: string) => {
-    const stationData = allStations.find(s => s.station_code === stationCode);
+    const stationData = stationByCode.get(stationCode);
     if (stationData) {
       setSelectedStation(stationData);
     }

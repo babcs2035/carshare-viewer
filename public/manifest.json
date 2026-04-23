@@ -1,0 +1,16 @@
+{
+  "name": "carshare-viewer | 全国のカーシェア情報を地図や検索で見やすく確認",
+  "short_name": "carshare-viewer",
+  "description": "全国のカーシェア情報を地図や検索で見やすく確認",
+  "start_url": "/carshare-viewer/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "/carshare-viewer/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,57 +1,50 @@
+/**
+ * ランキングページ
+ *
+ * Server Component として機能：
+ * 1. MongoDB から前計算済み Ranking データを取得
+ * 2. 車両数・車種数別ランキングと詳細ステーション情報を取得
+ * 3. Client Component へランキングデータを渡却
+ *
+ * Client Component が受け取り：
+ * - ランキング表示（スコアボード形式）
+ * - ステーション詳細（車両情報，住所，写真）
+ *
+ * パフォーマンス最適化：
+ * - サーバーで前計算済みランキング取得（ランタイム計算廃止）
+ * - 上位 16 駅のみ事前取得・表示
+ */
+
 import {
   type RankedStation,
   RankingPageClient,
 } from '@/components/RankingPageClient';
-import type { Station } from '@/types';
+import { getRankingDetailStations, getRankingLeaders } from '@/lib/stations';
 
-/**
- * Fetches all station data from the API route.
- * This function runs only on the server.
- */
-async function getStations(): Promise<Station[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stations`, {
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch station data');
-  }
-  return res.json();
-}
+export const dynamic = 'force-dynamic';
 
-/**
- * This is a Server Component.
- * It fetches data, calculates rankings, and passes the results to a Client Component.
- */
 export default async function RankingPage() {
-  const allStations = await getStations();
+  const leaders = await getRankingLeaders(16);
+  console.log(
+    `✅ Loaded ranking leaders (${leaders.topByCarCount.length} by car count, ${leaders.topByVariety.length} by variety)`,
+  );
 
-  // 1. Calculate Top 16 by number of cars
-  const topByCarCount: RankedStation[] = [...allStations]
-    .map(station => ({
-      code: station.station_code,
-      name: station.station_name,
-      value: station.car_fleet.length,
-      unit: '台',
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 16);
-
-  // 2. Calculate Top 16 by variety of car models
-  const topByVariety: RankedStation[] = [...allStations]
-    .map(station => ({
-      code: station.station_code,
-      name: station.station_name,
-      value: new Set(station.car_fleet.map(car => car.car_name)).size,
-      unit: '車種',
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 16);
+  const topByCarCount: RankedStation[] = leaders.topByCarCount.map(station => ({
+    ...station,
+    unit: '台',
+  }));
+  const topByVariety: RankedStation[] = leaders.topByVariety.map(station => ({
+    ...station,
+    unit: '車種',
+  }));
+  const detailStations = await getRankingDetailStations(16);
+  console.log(`✅ Loaded ${detailStations.length} detail stations`);
 
   return (
     <RankingPageClient
       topByCarCount={topByCarCount}
       topByVariety={topByVariety}
-      allStations={allStations}
+      detailStations={detailStations}
     />
   );
 }

@@ -1,29 +1,44 @@
+/**
+ * トップページ（地図表示）
+ *
+ * Server Component として機能：
+ * 1. URL クエリパラメータ（pref, city, cars）を解析
+ * 2. 初期フィルター状態を Client Component へ props 渡却
+ *
+ * Client Component が受け取り：
+ * - インタラクティブな地図操作（マーカー表示，フィルタ）
+ * - URL クエリ同期，フィルタ反応性改善（useDeferredValue）
+ *
+ * キャッシュ戦略：
+ * - force-dynamic で毎リクエスト描画
+ */
+
+import { getMapStationsAction } from '@/app/actions/stations';
 import { ClientPage } from '@/components/ClientPage';
-import type { Station } from '@/types';
 
-/**
- * Fetches station data from the API route.
- * This function runs only on the server.
- */
-async function getStations(): Promise<Station[]> {
-  // Use a direct fetch to our own API route.
-  // "no-store" ensures the data is fetched fresh on every request.
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stations`, {
-    cache: 'no-store',
-  });
+export const dynamic = 'force-dynamic';
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch station data');
-  }
-  return res.json();
-}
+type HomePageProps = {
+  searchParams: Promise<{
+    pref?: string;
+    city?: string;
+    cars?: string;
+  }>;
+};
 
-/**
- * This is a Server Component.
- * It fetches data on the server and passes it to a Client Component.
- */
-export default async function HomePage() {
-  const allStations = await getStations();
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const allStations = await getMapStationsAction();
 
-  return <ClientPage allStations={allStations} />;
+  const prefecture = params.pref || 'all';
+  const city = prefecture === 'all' ? 'all' : params.city || 'all';
+  const initialFilters = {
+    prefecture,
+    city,
+    carNames: params.cars?.split(',').filter(Boolean) || [],
+  };
+
+  return (
+    <ClientPage allStations={allStations} initialFilters={initialFilters} />
+  );
 }

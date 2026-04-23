@@ -1,4 +1,72 @@
 [tools]
-node = "24.10.0"
-pnpm = "10.24.0"
-python = "3.10.12"
+node = "25.9.0"
+pnpm = "10.33.0"
+
+[tasks.setup]
+description = "Complete all local environment setup (pnpm install, .env creation, etc.)"
+run = '''
+#!/usr/bin/env bash
+set -e
+
+echo "📦 Installing dependencies with pnpm..."
+pnpm install
+
+if [ ! -f .env ]; then
+  echo "📝 Creating .env from .env.sample..."
+  cp .env.sample .env
+else
+  echo "✅ .env file already exists."
+fi
+
+echo "✅ Local environment setup completed!"
+'''
+
+[tasks.dev]
+description = "Start development server (MongoDB container auto-start)"
+run = '''
+docker compose up -d mongo
+pnpm dev
+'''
+
+[tasks.build]
+description = "Build application for production"
+run = "pnpm build"
+
+[tasks.lint]
+description = "Run Biome linter on all files"
+run = "pnpm lint"
+
+[tasks.format]
+description = "Format code with Biome"
+run = "pnpm format"
+
+[tasks.check]
+description = "Run full Biome checks (lint + format)"
+run = "pnpm check"
+
+[tasks.typecheck]
+description = "Run TypeScript type checking"
+run = "pnpm typecheck"
+
+[tasks.fetch]
+description = "Fetch station data from API (MongoDB container auto-start)"
+run = '''
+docker compose up -d mongo
+pnpm run fetch
+'''
+
+[tasks."docker:build"]
+description = "Build Docker images"
+run = "docker compose build"
+
+[tasks."docker:up"]
+description = "Start Docker containers"
+run = "docker compose up -d"
+
+[tasks."docker:down"]
+description = "Stop Docker containers"
+run = "docker compose down"
+
+[tasks."docker:logs"]
+description = "Display Docker container logs"
+run = "docker compose logs -f"

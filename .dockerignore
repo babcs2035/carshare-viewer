@@ -1,0 +1,10 @@
+.git
+.github
+.next
+.vscode
+node_modules
+*.md
+*.tsbuildinfo
+.env
+.env.*
+!.env.sample

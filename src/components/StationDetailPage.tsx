@@ -1,3 +1,15 @@
+/**
+ * ステーション詳細ページコンポーネント
+ *
+ * 主な機能：
+ * - ステーション名・住所・コメント表示
+ * - 車両一覧（車種・名前・備考）をカード形式で表示
+ * - 写真ギャラリー表示（複数画像対応）
+ * - 1 ヶ月・3 ヶ月の予約状況ラベル表示
+ * - 外部リンク（Google Maps，タイムズカー公式）への遷移
+ * - モーダルでのスクロール対応
+ */
+
 'use client';
 
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
@@ -104,7 +116,7 @@ export function StationDetailPage({ station }: StationDetailPageProps) {
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={3}
-          alignItems='flex-start'
+          sx={{ alignItems: 'flex-start' }}
         >
           <Box sx={{ flex: 1 }}>
             <Typography
@@ -144,7 +156,7 @@ export function StationDetailPage({ station }: StationDetailPageProps) {
               <Button
                 variant='contained'
                 color='warning'
-                href={`https://share.timescar.jp/view/reserve/input.jsp?scd=${station.station_code}`}
+                href={`https://share.carshare-viewer.jp/view/reserve/input.jsp?scd=${station.station_code}`}
                 target='_blank'
                 rel='noopener'
                 sx={{ borderRadius: 2 }}
@@ -237,6 +249,7 @@ export function StationDetailPage({ station }: StationDetailPageProps) {
               >
                 {station.car_fleet.map((car, index) => (
                   <ListItem
+                    // biome-ignore lint/suspicious/noArrayIndexKey: 静的な表示リストであり，車両名とインデックスの組み合わせで一意性を確保
                     key={`${car.car_name}-${index}`}
                     sx={{
                       borderBottom:

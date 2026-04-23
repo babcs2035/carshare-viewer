@@ -1,3 +1,12 @@
+/**
+ * モバイルナビゲーション
+ *
+ * ハンバーガーメニュー（Drawer）を提供し，モバイル端末で全ページ・最後更新日時へのアクセスを可能にする
+ * - 地図，ダッシュボード，ランキングへのリンク
+ * - 最終更新日時表示
+ * - Menu ボタンクリックで Drawer 開閉
+ */
+
 'use client';
 
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,7 +29,13 @@ import {
 import Link from 'next/link';
 import { useState } from 'react';
 
-export function MobileNavigation() {
+type MobileNavigationProps = {
+  lastUpdatedDisplay: string | null;
+};
+
+export function MobileNavigation({
+  lastUpdatedDisplay,
+}: MobileNavigationProps) {
   const [open, setOpen] = useState(false);
 
   const menuItems = [
@@ -46,8 +61,10 @@ export function MobileNavigation() {
         anchor='right'
         open={open}
         onClose={() => setOpen(false)}
-        PaperProps={{
-          sx: { width: 280, backgroundColor: 'background.paper' },
+        slotProps={{
+          paper: {
+            sx: { width: 280, backgroundColor: 'background.paper' },
+          },
         }}
       >
         <Box
@@ -64,6 +81,14 @@ export function MobileNavigation() {
           <IconButton onClick={() => setOpen(false)}>
             <CloseIcon />
           </IconButton>
+        </Box>
+
+        <Divider />
+
+        <Box sx={{ px: 2, py: 1.5 }}>
+          <Typography variant='body2' color='text.secondary'>
+            最終更新: {lastUpdatedDisplay ?? '未取得'}
+          </Typography>
         </Box>
 
         <Divider />
@@ -91,7 +116,7 @@ export function MobileNavigation() {
                 </ListItemIcon>
                 <ListItemText
                   primary={item.text}
-                  primaryTypographyProps={{ fontWeight: 500 }}
+                  slotProps={{ primary: { sx: { fontWeight: 500 } } }}
                 />
               </ListItemButton>
             </ListItem>

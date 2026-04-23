@@ -1,7 +1,17 @@
+/**
+ * MUI テーマレジストリ
+ *
+ * Next.js App Router と MUI の統合，SSR 時のスタイル生成を管理
+ * - Material Design テーマ定義（Primary Blue）
+ * - AppRouterCacheProvider でレイアウト安定性確保
+ * - CssBaseline で標準スタイルリセット
+ */
+
 'use client';
 
 import { CssBaseline } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { ReactNode } from 'react';
 
 const theme = createTheme({
@@ -134,9 +144,11 @@ interface ThemeRegistryProps {
 
 export default function ThemeRegistry({ children }: ThemeRegistryProps) {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      {children}
-    </ThemeProvider>
+    <AppRouterCacheProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {children}
+      </ThemeProvider>
+    </AppRouterCacheProvider>
   );
 }

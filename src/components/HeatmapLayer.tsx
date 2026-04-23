@@ -1,3 +1,11 @@
+/**
+ * Leaflet.heat プラグイン統合
+ *
+ * [緯度，経度，強度] 形式のデータポイント配列をヒートマップレイヤーとして描画
+ * - Leaflet.heat ライブラリを動的に読み込み・初期化
+ * - 車両密度を色勾配（青→赤）で表現
+ */
+
 'use client';
 
 import { useEffect } from 'react';

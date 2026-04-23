@@ -1,3 +1,12 @@
+/**
+ * フィルターパネルコンポーネント
+ *
+ * 地図表示ページでユーザーが都道府県・市区町村・車種を選択して結果を絞り込むための UI を提供
+ * - 都道府県選択時に市区町村・車種が動的に更新
+ * - 選択状態はプロップス（URL クエリ同期）で管理
+ * - Chip で選択タグを表示，Dialog で詳細選択可能
+ */
+
 'use client';
 
 import ClearIcon from '@mui/icons-material/Clear';
@@ -29,10 +38,10 @@ import {
   useTheme,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import type { Station } from '@/types';
+import type { MapStation } from '@/types';
 
 interface FilterPanelProps {
-  stations: Station[];
+  stations: MapStation[];
   selectedPrefecture: string;
   setSelectedPrefecture: (value: string) => void;
   selectedCity: string;
@@ -74,21 +83,13 @@ export function FilterPanel({
     const carData = new Map<string, string[]>();
 
     stations.forEach(s => {
-      const prefectureMatch = s.address.match(/^(.{2,3}?[都道府県])/);
-      if (prefectureMatch) {
-        prefectureSet.add(prefectureMatch[0]);
-      }
+      prefectureSet.add(s.prefecture);
 
-      if (s.address.startsWith(tempSelectedPrefecture)) {
-        const cityMatch = s.address.match(/(市|区|郡|町|村)/);
-        if (cityMatch && cityMatch.index !== undefined) {
-          const cityIndex = cityMatch.index + cityMatch[0].length;
-          const city = s.address.substring(
-            prefectureMatch ? prefectureMatch[0].length : 0,
-            cityIndex,
-          );
-          citySet.add(city);
-        }
+      if (
+        tempSelectedPrefecture === 'all' ||
+        s.prefecture === tempSelectedPrefecture
+      ) {
+        citySet.add(s.city);
       }
 
       s.car_fleet.forEach(c => {
@@ -233,7 +234,9 @@ export function FilterPanel({
   };
 
   const areFiltersActive =
-    selectedPrefecture !== 'all' || selectedCarNames.length > 0;
+    selectedPrefecture !== 'all' ||
+    selectedCity !== 'all' ||
+    selectedCarNames.length > 0;
 
   if (!isClient) {
     return null;
@@ -286,7 +289,7 @@ export function FilterPanel({
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             spacing={2}
-            alignItems='center'
+            sx={{ alignItems: 'center' }}
           >
             <Button
               variant='outlined'
@@ -314,7 +317,12 @@ export function FilterPanel({
               >
                 適用中のフィルター:
               </Typography>
-              <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
+              <Stack
+                direction='row'
+                spacing={1}
+                useFlexGap
+                sx={{ flexWrap: 'wrap' }}
+              >
                 {selectedPrefecture !== 'all' && (
                   <Chip
                     label={selectedPrefecture}

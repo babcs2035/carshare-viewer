@@ -1,0 +1,36 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE:-ghcr.io/babcs2035/carshare-viewer:latest}
+    ports:
+      - "127.0.0.1:${PORT:-3200}:3000"
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - MONGO_URI=mongodb://mongo:27017/
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  fetch-cron:
+    image: ${DOCKER_IMAGE:-ghcr.io/babcs2035/carshare-viewer:latest}
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+      - TZ=Asia/Tokyo
+    depends_on:
+      - mongo
+    command: >
+      sh -c "echo '0 3 * * * cd /app && pnpm run fetch >> /proc/1/fd/1 2>> /proc/1/fd/2' > /etc/crontabs/root && crond -f -l 8"
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

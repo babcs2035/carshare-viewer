@@ -1,0 +1,4 @@
+mise run lint
+mise run format
+mise run check
+mise run typecheck

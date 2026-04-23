@@ -1,3 +1,12 @@
+/**
+ * ヒートマップ表示地図
+ *
+ * Dashboard ページで車両密度をヒートマップで可視化
+ * - OpenStreetMap タイルレイヤー
+ * - HeatmapLayer でジオ座標・車両数密度を表示
+ * - SSR 無効（Leaflet ブラウザ API 依存）
+ */
+
 'use client';
 
 import { MapContainer, TileLayer } from 'react-leaflet';
