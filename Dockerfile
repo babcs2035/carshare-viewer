@@ -22,7 +22,7 @@ COPY . .
 # NEXT_PUBLIC_ 変数はクライアントバンドルへ埋め込まれる
 # MONGO_URI はビルド時に必要（MongoDB 接続確認のため）
 ARG NEXT_PUBLIC_API_URL=http://localhost:3000/carshare-viewer
-ARG MONGO_URI=mongodb://mongo:27017/
+ARG MONGO_URI=mongodb://db:27017/
 
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV MONGO_URI=${MONGO_URI}
@@ -40,6 +40,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # scripts を含める（Node.js スクリプトとして実行）
 COPY scripts ./scripts
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 # node_modules も必要な場合がある（scripts 内で tsx や依存を使用するため）
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json tsconfig.json ./
@@ -49,7 +50,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-RUN chown -R nextjs:nodejs /app
+RUN mkdir -p /app/crontabs && \
+    chmod +x /usr/local/bin/entrypoint.sh && \
+    chown -R nextjs:nodejs /app
 
 USER nextjs
 
@@ -58,4 +61,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-CMD ["node", "server.js"]
+CMD ["/usr/local/bin/entrypoint.sh"]

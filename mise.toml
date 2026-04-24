@@ -24,7 +24,7 @@ echo "✅ Local environment setup completed!"
 [tasks.dev]
 description = "Start development server (MongoDB container auto-start)"
 run = '''
-docker compose up -d mongo
+docker compose up -d db
 pnpm dev
 '''
 
@@ -51,7 +51,7 @@ run = "pnpm typecheck"
 [tasks.fetch]
 description = "Fetch station data from API (MongoDB container auto-start)"
 run = '''
-docker compose up -d mongo
+docker compose up -d db
 pnpm run fetch
 '''
 

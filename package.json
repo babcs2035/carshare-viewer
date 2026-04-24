@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "fetch": "tsx scripts/fetch.ts",
     "lint": "biome check --write src",
     "format": "biome format --write src",
     "check": "biome check src && tsc --noEmit",
+    "type-check": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },

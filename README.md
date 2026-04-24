@@ -131,21 +131,20 @@ carshare-viewer/
 
 ### 定期取得スクリプト（毎日 03:00）
 
-`docker-compose.yml` / `docker-compose.prod.yml` では `fetch-cron` サービスが以下を実行：
+`docker-compose.yml` / `docker-compose.prod.yml` では `app` コンテナ内で cron を常駐起動し，毎日 03:00 に fetch を実行する．
 
 ```yaml
-fetch-cron:
+app:
   image: ${DOCKER_IMAGE:-carshare-viewer:latest}
   environment:
     TZ: Asia/Tokyo
-  command: |
-    sh -c 'crond -f -l 8'
-  # /etc/cron.d/fetch: 毎日 03:00 に `pnpm run fetch` 実行
+  command: /usr/local/bin/entrypoint.sh
+  # entrypoint が crond を起動し，毎日 03:00 に `pnpm run fetch` 実行
 ```
 
-- cron ジョブは Docker イメージ作成時に Dockerfile で設定
+- cron ジョブは app コンテナ起動時に entrypoint で設定
 - `TZ=Asia/Tokyo` により東京時刻で実行
-- 実行ログは `docker compose logs fetch-cron` で確認可能
+- 実行ログは `docker compose logs app` で確認可能
 
 ## セットアップ
 
@@ -169,14 +168,14 @@ cp .env.sample .env
 | 変数名                | 説明                                                         | デフォルト値                            |
 | --------------------- | ------------------------------------------------------------ | --------------------------------------- |
 | `PORT`                | ホストに公開するポート番号（Docker 開発環境のみ）            | `3200`                                  |
-| `MONGO_URI`           | MongoDB 接続 URI（形式: `mongodb://host:port/`）             | `mongodb://mongo:27017/`                |
+| `MONGO_URI`           | MongoDB 接続 URI（形式: `mongodb://host:port/`）             | `mongodb://db:27017/`                   |
 | `NEXT_PUBLIC_API_URL` | Server Components からの API アクセス URL（通常は変更不要）  | `http://localhost:3000/carshare-viewer` |
 | `DOCKER_IMAGE`        | 本番用 Docker イメージ名（`docker-compose.prod.yml` で使用） | -                                       |
 
 ### Docker を使用した開発
 
 ```bash
-# Docker イメージのビルドとコンテナの起動（app / mongo / fetch-cron）
+# Docker イメージのビルドとコンテナの起動（app / db）
 docker compose up -d
 
 # ログの確認（リアルタイム更新）
@@ -260,16 +259,16 @@ mise run fetch
 
 ### 定期実行（毎日 03:00 JST）
 
-Docker Compose（開発・本番）では `fetch-cron` サービスが毎日 03:00 に自動的に `pnpm run fetch` を実行する．
+Docker Compose（開発・本番）では `app` サービス内の cron が毎日 03:00 に自動的に `pnpm run fetch` を実行する．
 
 定期実行の状況確認：
 
 ```bash
 # ログ表示
-docker compose logs fetch-cron
+docker compose logs app
 
 # 直近の実行結果を表示（最後 50 行）
-docker compose logs fetch-cron | tail -50
+docker compose logs app | tail -50
 ```
 
 定期実行は Docker 起動時に自動で有効化され，追加設定は不要である．
@@ -290,7 +289,7 @@ docker compose logs fetch-cron | tail -50
 2. デプロイ先サーバーに SSH で接続し，`docker-compose.prod.yml` を SCP で転送する
 3. GHCR からイメージを pull し，`docker compose up` で再起動する
 
-このプロセスにより，全サービス（app，mongo，fetch-cron）がデプロイ先で自動起動する．
+このプロセスにより，全サービス（app，db）がデプロイ先で自動起動する．
 
 ### GitHub Actions Secrets の設定
 
@@ -325,7 +324,7 @@ cd /path/to/deploy
 
 ```env
 PORT=3200
-MONGO_URI=mongodb://mongo:27017/
+MONGO_URI=mongodb://db:27017/
 NEXT_PUBLIC_API_URL=https://yourdomain.com/carshare-viewer
 DOCKER_IMAGE=ghcr.io/<owner>/<repo>:latest
 ```
@@ -341,9 +340,9 @@ DOCKER_IMAGE=ghcr.io/<owner>/<repo>:latest
 
 **本番環境で fetch が失敗する場合**:
 
-1. MongoDB 接続可否を確認: `docker exec <mongo-container> mongo --eval db.adminCommand({ping:1})`
+1. MongoDB 接続可否を確認: `docker exec carshare-viewer-db mongosh --eval "db.adminCommand({ ping: 1 })"`
 2. タイムズカー API 接続を確認: `curl https://api.timescar.jp/...`
-3. `fetch-cron` ログを確認: `docker compose -f docker-compose.prod.yml logs fetch-cron`
+3. cron 実行ログを確認: `docker compose -f docker-compose.prod.yml logs app`
 
 ## 開発ガイド
 
