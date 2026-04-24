@@ -170,7 +170,6 @@ cp .env.sample .env
 | `PORT`                | ホストに公開するポート番号（Docker 開発環境のみ）            | `3200`                                  |
 | `MONGO_URI`           | MongoDB 接続 URI（形式: `mongodb://host:port/`）             | `mongodb://db:27017/`                   |
 | `NEXT_PUBLIC_API_URL` | Server Components からの API アクセス URL（通常は変更不要）  | `http://localhost:3000/carshare-viewer` |
-| `SERVER_ACTIONS_ALLOWED_ORIGINS` | Server Actions で許可する Origin（カンマ区切り） | - |
 | `DOCKER_IMAGE`        | 本番用 Docker イメージ名（`docker-compose.prod.yml` で使用） | -                                       |
 
 ### Docker を使用した開発
@@ -327,7 +326,6 @@ cd /path/to/deploy
 PORT=3200
 MONGO_URI=mongodb://db:27017/
 NEXT_PUBLIC_API_URL=https://yourdomain.com/carshare-viewer
-SERVER_ACTIONS_ALLOWED_ORIGINS=yourdomain.com,www.yourdomain.com
 DOCKER_IMAGE=ghcr.io/<owner>/<repo>:latest
 ```
 
@@ -349,8 +347,7 @@ DOCKER_IMAGE=ghcr.io/<owner>/<repo>:latest
 **`Invalid Server Actions request` が発生する場合**:
 
 1. `.env` の `NEXT_PUBLIC_API_URL` が実際の公開ドメインと一致しているか確認
-2. `SERVER_ACTIONS_ALLOWED_ORIGINS` に公開ドメインを設定（例: `ktak.dev,www.ktak.dev`）
-3. 再起動: `docker compose -f docker-compose.prod.yml up -d --force-recreate`
+2. 再起動: `docker compose -f docker-compose.prod.yml up -d --force-recreate`
 
 ## 開発ガイド
 
